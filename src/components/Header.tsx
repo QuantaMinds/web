@@ -1,12 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LogOut, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
 
   // Handle scroll events
   useEffect(() => {
@@ -39,12 +41,51 @@ const Header = () => {
           
           <nav className="hidden md:flex items-center space-x-8">
             <Link to="/about" className="text-gray-300 hover:text-white transition">About</Link>
-            {/* <Link to="/product" className="text-gray-300 hover:text-white transition">Product</Link> */}
             <Link to="/technology" className="text-gray-300 hover:text-white transition">How it works</Link>
             <Link to="/features" className="text-gray-300 hover:text-white transition">Features</Link>
             <Link to="/pricing" className="text-gray-300 hover:text-white transition">Pricing</Link>
             <Link to="/contact" className="text-gray-300 hover:text-white transition">Contact</Link>
           </nav>
+          
+          <div className="hidden md:flex items-center space-x-4">
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2 text-gray-300">
+                  <User className="w-4 h-4" />
+                  <span className="text-sm">
+                    {user.firstName} {user.lastName}
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={logout}
+                  className="text-gray-300 hover:text-white"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="text-gray-300 hover:text-white"
+                >
+                  <Link to="/login">Login</Link>
+                </Button>
+                <Button
+                  size="sm"
+                  asChild
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  <Link to="/register">Sign Up</Link>
+                </Button>
+              </div>
+            )}
+          </div>
           
           <div className="md:hidden">
             <button 
@@ -70,33 +111,26 @@ const Header = () => {
               About
             </Link>
             <Link 
-              to="/product" 
-              className="text-gray-300 hover:text-white transition"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Product
-            </Link>
-            <Link 
               to="/technology" 
               className="text-gray-300 hover:text-white transition"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               How it works
             </Link>
-            <a 
-              href="/features" 
+            <Link 
+              to="/features" 
               className="text-gray-300 hover:text-white transition"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Features
-            </a>
-            <a 
-              href="/pricing" 
+            </Link>
+            <Link 
+              to="/pricing" 
               className="text-gray-300 hover:text-white transition"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Pricing
-            </a>
+            </Link>
             <Link 
               to="/contact" 
               className="text-gray-300 hover:text-white transition"
@@ -104,6 +138,47 @@ const Header = () => {
             >
               Contact
             </Link>
+            
+            {/* Mobile Auth Section */}
+            <div className="border-t border-white/10 pt-8 flex flex-col space-y-4">
+              {user ? (
+                <div className="text-center">
+                  <div className="flex items-center justify-center space-x-2 text-gray-300 mb-4">
+                    <User className="w-5 h-5" />
+                    <span>{user.firstName} {user.lastName}</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      logout();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="text-gray-300 hover:text-white"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col space-y-4">
+                  <Button
+                    variant="ghost"
+                    asChild
+                    className="text-gray-300 hover:text-white"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Link to="/login">Login</Link>
+                  </Button>
+                  <Button
+                    asChild
+                    className="bg-primary hover:bg-primary/90"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Link to="/register">Sign Up</Link>
+                  </Button>
+                </div>
+              )}
+            </div>
           </nav>
         </div>
       )}
