@@ -1,12 +1,16 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authApi, AuthResponse } from '@/services/apiService';
-import { toast } from 'sonner';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { authApi, AuthResponse } from "@/services/apiService";
+import { toast } from "sonner";
+import { set } from "date-fns";
 
 interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
+  userId: string;
 }
 
 interface AuthContextType {
@@ -22,8 +26,8 @@ interface AuthContextType {
 }
 
 interface RegisterData {
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
   password: string;
 }
@@ -33,7 +37,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
@@ -49,43 +53,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     // Check for existing token on app load
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      verifyToken(token);
+    const userId = localStorage.getItem("userId");
+    if (userId == null || userId == undefined || userId == "") {
+      console.error("Token verification failed");
+      localStorage.removeItem("userId");
+      toast.error("Session expired. Please login again.");
+      setIsLoading(false);
     } else {
+      setUser({ userId });
+      console.log("User ID found in localStorage:", userId);
       setIsLoading(false);
     }
 
     // Load chat count from localStorage
-    const savedChatCount = localStorage.getItem('chatCount');
+    const savedChatCount = localStorage.getItem("chatCount");
     if (savedChatCount) {
       setChatCount(parseInt(savedChatCount, 10));
     }
   }, []);
 
-  const verifyToken = async (token: string) => {
-    try {
-      const response = await authApi.verifyToken();
-      setUser(response.user);
-    } catch (error) {
-      console.error('Token verification failed:', error);
-      localStorage.removeItem('authToken');
-      toast.error('Session expired. Please login again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
       const response = await authApi.login({ email, password });
-      
-      localStorage.setItem('authToken', response.token);
-      setUser(response.user);
-      toast.success('Login successful!');
+
+      setUser(response.data);
+      localStorage.setItem("userId", response.data.userId);
+      toast.success("Login successful!");
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      const errorMessage =
+        error instanceof Error ? error.message : "Login failed";
       toast.error(errorMessage);
       throw error;
     } finally {
@@ -97,12 +94,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     try {
       const response = await authApi.register(userData);
-      
-      localStorage.setItem('authToken', response.token);
-      setUser(response.user);
-      toast.success('Registration successful!');
+      if (response !== null || response === undefined) {
+        toast.success("Registration successful!");
+      } else {
+        toast.error("Registration failed. Please try again.");
+      }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Registration failed';
+      const errorMessage =
+        error instanceof Error ? error.message : "Registration failed";
       toast.error(errorMessage);
       throw error;
     } finally {
@@ -111,8 +110,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('chatCount');
     setUser(null);
     setChatCount(0);
   };
@@ -120,12 +117,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const incrementChatCount = () => {
     const newCount = chatCount + 1;
     setChatCount(newCount);
-    localStorage.setItem('chatCount', newCount.toString());
+    localStorage.setItem("chatCount", newCount.toString());
   };
 
   const resetChatCount = () => {
     setChatCount(0);
-    localStorage.removeItem('chatCount');
+    localStorage.removeItem("chatCount");
   };
 
   const value = {

@@ -1,54 +1,48 @@
 // API Configuration
 export const API_CONFIG = {
   // Development API URL (your local FastAPI server)
-  DEV_BASE_URL: 'http://localhost:8000',
-  
+  DEV_BASE_URL: "http://localhost:8080",
+
   // Production API URL (update this when deploying)
-  PROD_BASE_URL: 'https://your-production-api.com', // Update this for production
-  
+  PROD_BASE_URL: "https://contract-02-37718501430.us-east4.run.app", // Update this for production
+
   // Automatically detect environment
   get BASE_URL() {
     // If you're in development (localhost), use dev URL
     // If deployed, use production URL
-    const isLocalhost = window.location.hostname === 'localhost' || 
-                       window.location.hostname === '127.0.0.1' ||
-                       window.location.hostname.includes('lovableproject.com');
-    
+    const isLocalhost =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1" ||
+      window.location.hostname.includes("lovableproject.com");
+
     // For now, always use production URL for Lovable hosted apps
     // Change this logic based on your deployment strategy
-    return window.location.hostname.includes('lovableproject.com') 
-      ? this.PROD_BASE_URL 
-      : this.DEV_BASE_URL;
+    // return !isLocalhost ? this.PROD_BASE_URL : this.DEV_BASE_URL;
+    return this.PROD_BASE_URL;
   },
-  
+
   // API Endpoints
   ENDPOINTS: {
     // Authentication
-    LOGIN: '/auth/login',
-    REGISTER: '/auth/register',
-    VERIFY_TOKEN: '/auth/verify',
-    REFRESH_TOKEN: '/auth/refresh',
-    
-    // User Management
-    USER_PROFILE: '/user/profile',
-    UPDATE_PROFILE: '/user/profile',
-    
+    LOGIN: "/api/user/login",
+    REGISTER: "/api/user/register",
+
     // Document Analysis (if you plan to add these)
-    UPLOAD_DOCUMENT: '/documents/upload',
-    ANALYZE_DOCUMENT: '/documents/analyze',
-    GET_ANALYSIS: '/documents/analysis',
-    
+    UPLOAD_DOCUMENT: "/api/upload",
+
     // Chat/AI Features
-    CHAT_MESSAGE: '/chat/message',
-    CHAT_HISTORY: '/chat/history',
-    
+    CHAT_MESSAGE: "/api/query",
+
+    // get Collections
+    GET_COLLECTIONS: "/api/get_my_collections",
+
     // Usage Tracking
-    TRACK_USAGE: '/usage/track',
-    GET_USAGE: '/usage/stats',
+    TRACK_USAGE: "/usage/track",
+    GET_USAGE: "/usage/stats",
   },
-  
+
   // Request timeout
-  TIMEOUT: 10000, // 10 seconds
+  TIMEOUT: 30000, // 10 seconds
 };
 
 // Helper to build full URLs
@@ -57,11 +51,11 @@ export const buildApiUrl = (endpoint: string): string => {
 };
 
 // For easy environment switching during development
-export const setApiEnvironment = (env: 'development' | 'production') => {
-  if (env === 'development') {
-    localStorage.setItem('api_env', 'development');
+export const setApiEnvironment = (env: "dev" | "prod") => {
+  if (env === "dev") {
+    localStorage.setItem("api_env", "dev");
   } else {
-    localStorage.removeItem('api_env');
+    localStorage.removeItem("api_env");
   }
   window.location.reload(); // Reload to apply changes
 };

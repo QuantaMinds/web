@@ -1,4 +1,4 @@
-import { API_CONFIG, buildApiUrl } from '@/config/api';
+import { API_CONFIG, buildApiUrl } from "@/config/api";
 
 // Response types for better type safety
 export interface ApiResponse<T = any> {
@@ -9,18 +9,16 @@ export interface ApiResponse<T = any> {
 }
 
 export interface AuthResponse {
-  token: string;
-  user: {
-    id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
+  message: string;
+  status: string;
+  data: {
+    userId: string;
   };
 }
 
 export interface RegisterData {
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
   password: string;
 }
@@ -33,42 +31,36 @@ export interface LoginData {
 // Base API service class
 class BaseApiService {
   private getAuthToken(): string | null {
-    return localStorage.getItem('authToken');
+    return localStorage.getItem("authToken");
   }
 
-  private getHeaders(includeAuth: boolean = true): HeadersInit {
+  private getHeaders(): HeadersInit {
     const headers: HeadersInit = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     };
-
-    if (includeAuth) {
-      const token = this.getAuthToken();
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-    }
-
     return headers;
   }
 
   protected async makeRequest<T>(
     endpoint: string,
-    options: RequestInit = {},
-    includeAuth: boolean = true
+    options: RequestInit = {}
   ): Promise<T> {
     const url = buildApiUrl(endpoint);
-    
+
     const config: RequestInit = {
       ...options,
       headers: {
-        ...this.getHeaders(includeAuth),
+        ...this.getHeaders(),
         ...options.headers,
       },
     };
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
+      const timeoutId = setTimeout(
+        () => controller.abort(),
+        API_CONFIG.TIMEOUT
+      );
 
       const response = await fetch(url, {
         ...config,
@@ -91,109 +83,66 @@ class BaseApiService {
       return await response.json();
     } catch (error) {
       if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          throw new Error('Request timeout');
+        if (error.name === "AbortError") {
+          throw new Error("Request timeout");
         }
         throw error;
       }
-      throw new Error('Unknown error occurred');
+      throw new Error("Unknown error occurred");
     }
   }
 
   // GET request
-  protected async get<T>(endpoint: string, includeAuth: boolean = true): Promise<T> {
-    return this.makeRequest<T>(endpoint, { method: 'GET' }, includeAuth);
+  protected async get<T>(endpoint: string): Promise<T> {
+    return this.makeRequest<T>(endpoint, { method: "GET" });
   }
 
   // POST request
-  protected async post<T>(
-    endpoint: string,
-    data?: any,
-    includeAuth: boolean = true
-  ): Promise<T> {
-    return this.makeRequest<T>(
-      endpoint,
-      {
-        method: 'POST',
-        body: data ? JSON.stringify(data) : undefined,
-      },
-      includeAuth
-    );
+  protected async post<T>(endpoint: string, data?: any): Promise<T> {
+    return this.makeRequest<T>(endpoint, {
+      method: "POST",
+      body: data ? JSON.stringify(data) : undefined,
+    });
   }
 
   // PUT request
-  protected async put<T>(
-    endpoint: string,
-    data?: any,
-    includeAuth: boolean = true
-  ): Promise<T> {
-    return this.makeRequest<T>(
-      endpoint,
-      {
-        method: 'PUT',
-        body: data ? JSON.stringify(data) : undefined,
-      },
-      includeAuth
-    );
+  protected async put<T>(endpoint: string, data?: any): Promise<T> {
+    return this.makeRequest<T>(endpoint, {
+      method: "PUT",
+      body: data ? JSON.stringify(data) : undefined,
+    });
   }
 
   // DELETE request
-  protected async delete<T>(endpoint: string, includeAuth: boolean = true): Promise<T> {
-    return this.makeRequest<T>(endpoint, { method: 'DELETE' }, includeAuth);
+  protected async delete<T>(endpoint: string): Promise<T> {
+    return this.makeRequest<T>(endpoint, { method: "DELETE" });
   }
 }
 
 // Authentication API service
 export class AuthApiService extends BaseApiService {
   async login(credentials: LoginData): Promise<AuthResponse> {
-    return this.post<AuthResponse>(API_CONFIG.ENDPOINTS.LOGIN, credentials, false);
+    return this.post<AuthResponse>(API_CONFIG.ENDPOINTS.LOGIN, credentials);
   }
 
-  async register(userData: RegisterData): Promise<AuthResponse> {
-    return this.post<AuthResponse>(API_CONFIG.ENDPOINTS.REGISTER, userData, false);
-  }
-
-  async verifyToken(): Promise<{ user: AuthResponse['user'] }> {
-    return this.get<{ user: AuthResponse['user'] }>(API_CONFIG.ENDPOINTS.VERIFY_TOKEN);
-  }
-
-  async refreshToken(): Promise<{ token: string }> {
-    return this.post<{ token: string }>(API_CONFIG.ENDPOINTS.REFRESH_TOKEN);
-  }
-}
-
-// User API service
-export class UserApiService extends BaseApiService {
-  async getProfile(): Promise<AuthResponse['user']> {
-    return this.get<AuthResponse['user']>(API_CONFIG.ENDPOINTS.USER_PROFILE);
-  }
-
-  async updateProfile(data: Partial<AuthResponse['user']>): Promise<AuthResponse['user']> {
-    return this.put<AuthResponse['user']>(API_CONFIG.ENDPOINTS.UPDATE_PROFILE, data);
+  async register(userData: RegisterData): Promise<string> {
+    return this.post<string>(API_CONFIG.ENDPOINTS.REGISTER, userData);
   }
 }
 
 // Chat API service
 export class ChatApiService extends BaseApiService {
-  async sendMessage(message: string, sessionId?: string): Promise<{
-    response: string;
-    sessionId: string;
+  async sendMessage(
+    message: string,
+    collection_name: string
+  ): Promise<{
+    user_input: string;
+    collection_name: string;
   }> {
     return this.post(API_CONFIG.ENDPOINTS.CHAT_MESSAGE, {
       message,
-      sessionId,
+      collection_name,
     });
-  }
-
-  async getChatHistory(sessionId: string): Promise<{
-    messages: Array<{
-      id: string;
-      text: string;
-      sender: 'user' | 'ai';
-      timestamp: string;
-    }>;
-  }> {
-    return this.get(`${API_CONFIG.ENDPOINTS.CHAT_HISTORY}/${sessionId}`);
   }
 }
 
@@ -204,16 +153,13 @@ export class DocumentApiService extends BaseApiService {
     filename: string;
   }> {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
 
     const url = buildApiUrl(API_CONFIG.ENDPOINTS.UPLOAD_DOCUMENT);
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem("authToken");
 
     const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      method: "POST",
       body: formData,
     });
 
@@ -222,16 +168,6 @@ export class DocumentApiService extends BaseApiService {
     }
 
     return response.json();
-  }
-
-  async analyzeDocument(documentId: string, query: string): Promise<{
-    response: string;
-    highlights?: Array<{ page: number; text: string }>;
-  }> {
-    return this.post(API_CONFIG.ENDPOINTS.ANALYZE_DOCUMENT, {
-      documentId,
-      query,
-    });
   }
 }
 
@@ -256,7 +192,6 @@ export class UsageApiService extends BaseApiService {
 
 // Singleton instances for easy use
 export const authApi = new AuthApiService();
-export const userApi = new UserApiService();
 export const chatApi = new ChatApiService();
 export const documentApi = new DocumentApiService();
 export const usageApi = new UsageApiService();
