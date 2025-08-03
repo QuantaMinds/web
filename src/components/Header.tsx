@@ -66,6 +66,12 @@ const Header = () => {
               Features
             </Link>
             <Link
+              to="/product"
+              className="text-gray-300 hover:text-white transition"
+            >
+              Product
+            </Link>
+            <Link
               to="/pricing"
               className="text-gray-300 hover:text-white transition"
             >
@@ -153,6 +159,13 @@ const Header = () => {
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Features
+            </Link>
+            <Link
+              to="/product"
+              className="text-gray-300 hover:text-white transition"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Product
             </Link>
             <Link
               to="/pricing"
