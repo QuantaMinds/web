@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { MessageCircle, X, Send } from "lucide-react";
 import { toast } from "sonner";
-import { chatApi } from "@/services/apiService";
+
 interface ChatMessage {
   text: string;
   sender: "user" | "bot";
@@ -22,8 +22,7 @@ const ChatBot: React.FC = () => {
 
   const toggleChat = () => setIsOpen((o) => !o);
 
-  const sendMessageApi = async (e: React.FormEvent) => {
-    alert("Sending message to API...");
+  const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     const userText = input.trim();
     if (!userText) return;
@@ -33,17 +32,18 @@ const ChatBot: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const res: string = await chatApi.sendMessage(
-        userText,
-        "lease_split" // Adjust as needed
-      );
-      const data: string = res;
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userText }),
+      });
+      const data = await res.json();
 
-      if (!res) {
-        throw new Error("Server error");
+      if (!res.ok) {
+        throw new Error(data.error || "Server error");
       }
 
-      setMessages((prev) => [...prev, { text: data, sender: "bot" }]);
+      setMessages((prev) => [...prev, { text: data.reply, sender: "bot" }]);
     } catch (err: unknown) {
       let message =
         "I'm having trouble connecting right now. Please try again later.";
@@ -150,7 +150,7 @@ const ChatBot: React.FC = () => {
           </div>
 
           <div className="p-4 border-t">
-            <form onSubmit={sendMessageApi} className="flex gap-2">
+            <form onSubmit={sendMessage} className="flex gap-2">
               <Input
                 placeholder="Type your message..."
                 value={input}

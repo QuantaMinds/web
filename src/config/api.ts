@@ -1,7 +1,7 @@
 // API Configuration
 export const API_CONFIG = {
   // Development API URL (your local FastAPI server)
-  DEV_BASE_URL: "http://localhost:8080",
+  DEV_BASE_URL: "http://localhost:8000",
 
   // Production API URL (update this when deploying)
   PROD_BASE_URL: "https://contract-02-37718501430.us-east4.run.app", // Update this for production

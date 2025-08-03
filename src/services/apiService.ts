@@ -28,6 +28,10 @@ export interface LoginData {
   password: string;
 }
 
+interface queryResponse {
+  response: string;
+}
+
 // Base API service class
 class BaseApiService {
   private getAuthToken(): string | null {
@@ -57,10 +61,6 @@ class BaseApiService {
       ...(withCredentials ? { credentials: "include" } : {}),
     };
 
-    // Debug: log config and url
-    console.log("API Request Config:", config);
-    console.log("API Request URL:", url);
-
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(
@@ -72,12 +72,6 @@ class BaseApiService {
         ...config,
         signal: controller.signal,
       });
-
-      // Debug: log response headers
-      console.log(
-        "API Response Headers:",
-        Array.from(response.headers.entries())
-      );
 
       clearTimeout(timeoutId);
 
@@ -118,6 +112,9 @@ class BaseApiService {
     data?: any,
     withCredentials?: boolean
   ): Promise<T> {
+    console.log("====================================");
+    console.log(`Making POST request to ${endpoint} with data:`, data);
+    console.log("====================================");
     return this.makeRequest<T>(
       endpoint,
       {
@@ -181,13 +178,12 @@ export class AuthApiService extends BaseApiService {
 // Chat API service
 export class ChatApiService extends BaseApiService {
   async sendMessage(
-    user_input: string,
-    collection_name: string,
+    queryData: { user_input: string; collection_name: string },
     withCredentials: boolean = true // <-- add parameter, default true
-  ): Promise<string> {
+  ): Promise<queryResponse> {
     return this.post(
       API_CONFIG.ENDPOINTS.CHAT_MESSAGE,
-      { user_input, collection_name },
+      queryData,
       withCredentials
     );
   }

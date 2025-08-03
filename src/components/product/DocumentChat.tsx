@@ -25,6 +25,10 @@ interface Message {
   highlights?: Array<{ page: number; text: string }>;
 }
 
+interface queryResponse {
+  response: string;
+}
+
 interface ChatSession {
   id: string;
   name: string;
@@ -199,13 +203,12 @@ const DocumentChat: React.FC<DocumentChatProps> = ({
     // Increment chat count for authenticated users
     incrementChatCount();
 
-    const query = inputValue.toLowerCase();
-    const res: string = await chatApi.sendMessage(
-      query,
-      "lease_split", // Adjust as needed
+    const query: string = inputValue.toLowerCase();
+    const res: queryResponse = await chatApi.sendMessage(
+      { user_input: query, collection_name: "lease_split" }, // Adjust as needed
       true // <-- ensure cookies are sent
     );
-    let response = res;
+    let response = res?.response;
 
     const aiMessage: Message = {
       id: (Date.now() + 1).toString(),
