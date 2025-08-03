@@ -43,7 +43,8 @@ class BaseApiService {
 
   protected async makeRequest<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    withCredentials: boolean = true // default to true for backward compatibility
   ): Promise<T> {
     const url = buildApiUrl(endpoint);
 
@@ -53,7 +54,12 @@ class BaseApiService {
         ...this.getHeaders(),
         ...options.headers,
       },
+      ...(withCredentials ? { credentials: "include" } : {}),
     };
+
+    // Debug: log config and url
+    console.log("API Request Config:", config);
+    console.log("API Request URL:", url);
 
     try {
       const controller = new AbortController();
@@ -66,6 +72,12 @@ class BaseApiService {
         ...config,
         signal: controller.signal,
       });
+
+      // Debug: log response headers
+      console.log(
+        "API Response Headers:",
+        Array.from(response.headers.entries())
+      );
 
       clearTimeout(timeoutId);
 
@@ -93,56 +105,91 @@ class BaseApiService {
   }
 
   // GET request
-  protected async get<T>(endpoint: string): Promise<T> {
-    return this.makeRequest<T>(endpoint, { method: "GET" });
+  protected async get<T>(
+    endpoint: string,
+    withCredentials?: boolean
+  ): Promise<T> {
+    return this.makeRequest<T>(endpoint, { method: "GET" }, withCredentials);
   }
 
   // POST request
-  protected async post<T>(endpoint: string, data?: any): Promise<T> {
-    return this.makeRequest<T>(endpoint, {
-      method: "POST",
-      body: data ? JSON.stringify(data) : undefined,
-    });
+  protected async post<T>(
+    endpoint: string,
+    data?: any,
+    withCredentials?: boolean
+  ): Promise<T> {
+    return this.makeRequest<T>(
+      endpoint,
+      {
+        method: "POST",
+        body: data ? JSON.stringify(data) : undefined,
+      },
+      withCredentials
+    );
   }
 
   // PUT request
-  protected async put<T>(endpoint: string, data?: any): Promise<T> {
-    return this.makeRequest<T>(endpoint, {
-      method: "PUT",
-      body: data ? JSON.stringify(data) : undefined,
-    });
+  protected async put<T>(
+    endpoint: string,
+    data?: any,
+    withCredentials?: boolean
+  ): Promise<T> {
+    return this.makeRequest<T>(
+      endpoint,
+      {
+        method: "PUT",
+        body: data ? JSON.stringify(data) : undefined,
+      },
+      withCredentials
+    );
   }
 
   // DELETE request
-  protected async delete<T>(endpoint: string): Promise<T> {
-    return this.makeRequest<T>(endpoint, { method: "DELETE" });
+  protected async delete<T>(
+    endpoint: string,
+    withCredentials?: boolean
+  ): Promise<T> {
+    return this.makeRequest<T>(endpoint, { method: "DELETE" }, withCredentials);
   }
 }
 
 // Authentication API service
 export class AuthApiService extends BaseApiService {
-  async login(credentials: LoginData): Promise<AuthResponse> {
-    return this.post<AuthResponse>(API_CONFIG.ENDPOINTS.LOGIN, credentials);
+  async login(
+    credentials: LoginData,
+    withCredentials?: boolean
+  ): Promise<AuthResponse> {
+    return this.post<AuthResponse>(
+      API_CONFIG.ENDPOINTS.LOGIN,
+      credentials,
+      withCredentials
+    );
   }
 
-  async register(userData: RegisterData): Promise<string> {
-    return this.post<string>(API_CONFIG.ENDPOINTS.REGISTER, userData);
+  async register(
+    userData: RegisterData,
+    withCredentials: boolean = false
+  ): Promise<string> {
+    return this.post<string>(
+      API_CONFIG.ENDPOINTS.REGISTER,
+      userData,
+      withCredentials
+    );
   }
 }
 
 // Chat API service
 export class ChatApiService extends BaseApiService {
   async sendMessage(
-    message: string,
-    collection_name: string
-  ): Promise<{
-    user_input: string;
-    collection_name: string;
-  }> {
-    return this.post(API_CONFIG.ENDPOINTS.CHAT_MESSAGE, {
-      message,
-      collection_name,
-    });
+    user_input: string,
+    collection_name: string,
+    withCredentials: boolean = true // <-- add parameter, default true
+  ): Promise<string> {
+    return this.post(
+      API_CONFIG.ENDPOINTS.CHAT_MESSAGE,
+      { user_input, collection_name },
+      withCredentials
+    );
   }
 }
 

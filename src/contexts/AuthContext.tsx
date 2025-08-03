@@ -72,10 +72,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (
+    email: string,
+    password: string,
+    withCredentials: boolean = true
+  ) => {
     setIsLoading(true);
     try {
-      const response = await authApi.login({ email, password });
+      const response = await authApi.login(
+        { email, password },
+        withCredentials
+      );
 
       setUser(response.data);
       localStorage.setItem("userId", response.data.userId);
@@ -90,10 +97,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const register = async (userData: RegisterData) => {
+  const register = async (
+    userData: RegisterData,
+    withCredentials: boolean = false
+  ) => {
     setIsLoading(true);
     try {
-      const response = await authApi.register(userData);
+      const response = await authApi.register(userData, withCredentials);
       if (response !== null || response === undefined) {
         toast.success("Registration successful!");
       } else {
@@ -111,6 +121,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = () => {
     setUser(null);
+    localStorage.clear();
+    toast.success("Logout successful!");
     setChatCount(0);
   };
 
